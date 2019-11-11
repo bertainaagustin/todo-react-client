@@ -2,13 +2,19 @@ import axios from 'axios';
 
 export default class ToDoService {
     
-    constructor() {
+    constructor(token) {
         this.http = axios;
-        this.serverUrl = process.env.REACT_APP_SERVER + '/ToDoItems/';
+        this.serverUrl = process.env.REACT_APP_SERVER + '/ToDo/';
+        this.options = {
+                headers: {
+                    client: 1,
+                    Authorization: `Bearer ${token}`
+            }
+        };
     }
 
     async getTareas() {
-        const respuesta = await this.http.get(this.serverUrl);
+        const respuesta = await this.http.get(this.serverUrl,this.options);
         return respuesta.data;        
     }
 
@@ -16,7 +22,7 @@ export default class ToDoService {
         if (unToDo.name === "") {
             throw new Error('Debe ingresar un nombre para la tarea');
         }
-        const respuesta = await this.http.post(this.serverUrl, unToDo);
+        const respuesta = await this.http.post(this.serverUrl, unToDo,this.options);
         return respuesta.data;
     }
 

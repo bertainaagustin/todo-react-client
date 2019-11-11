@@ -11,7 +11,7 @@ class ToDo extends React.Component {
     
     constructor(props) {
         super(props);
-        this.toDoService = new ToDoService(); // Instancio el servicio
+        this.toDoService = new ToDoService(props.token); // Instancio el servicio
     }
 
     async componentDidMount() {
@@ -37,6 +37,7 @@ class ToDo extends React.Component {
 const mapStateToProps = (state) => {
     return {
         listado: state.taskList,
+        token: state.token
     }
 }
 

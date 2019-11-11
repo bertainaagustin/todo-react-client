@@ -60,7 +60,7 @@ class Login extends React.Component {
 
 const mapToActions = (dispatch) => {
     return {
-        setToken: (token) => dispatch({type:'SET_TOKEN', token})
+        setToken: (token) => dispatch({type:'SET_TOKEN', data: token})
     }
 }
 
