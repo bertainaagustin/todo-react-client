@@ -4,11 +4,12 @@ export default class ToDoService {
     
     constructor(token) {
         this.http = axios;
-        this.serverUrl = process.env.REACT_APP_SERVER + '/ToDo/';
+        this.serverUrl = process.env.REACT_APP_SERVER + '/ToDo';
         this.options = {
                 headers: {
                     client: 1,
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
             }
         };
     }
@@ -30,15 +31,15 @@ export default class ToDoService {
         if (unToDo.name === "") {
             throw new Error('Debe ingresar un nombre para la tarea');
         }
-        const respuesta = await this.http.put(this.serverUrl + "/" + unToDo.id, unToDo);
+        const respuesta = await this.http.put(this.serverUrl + "/" + unToDo.id, unToDo, this.options);
         return respuesta.data;
     }
 
     async deleteTarea(id) {
-        await this.http.delete(this.serverUrl + "/" + id);        
+        await this.http.delete(this.serverUrl + "/" + id, this.options);        
     }
 
-    async patchTarea(unToDo) {
-
+    async patchTarea(id, changes) {
+        await this.http.patch(this.serverUrl + "/" + id, changes, this.options);
     }
 }

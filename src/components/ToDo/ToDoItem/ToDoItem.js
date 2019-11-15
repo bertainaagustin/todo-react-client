@@ -8,23 +8,31 @@ class ToDoItem extends React.Component {
         super(props);
         this.state = {
             en_edicion: false,
+            asignando_responsable : false,
             tarea: '',
-            responsable_seleccionado_id: 0
+            responsable_seleccionado_Id: props.responsables[0].id
         }
         this.habilitarEdicion = this.habilitarEdicion.bind(this);
+        this.habilitarAsignarResponsable = this.habilitarAsignarResponsable.bind(this);
         this.cambioInput = this.cambioInput.bind(this);
-        this.save = this.save.bind(this);
+        this.updateItem = this.updateItem.bind(this);
+        this.addResponsible = this.addResponsible.bind(this);
         this.cancel = this.cancel.bind(this);
         this.toggleDone = this.toggleDone.bind(this);
-        this.toDoService = new ToDoService(); // Instancio el servicio
+        this.removeItem = this.removeItem.bind(this);       
+        this.toDoService = new ToDoService(props.token); // Instancio el servicio
 
     }
-
+    habilitarAsignarResponsable(e)
+    {
+        this.setState({
+            asignando_responsable : true
+        })
+    }
     habilitarEdicion(e) {
         this.setState({
             en_edicion: true,
-            tarea: this.props.item.name,
-            responsable_seleccionado_id: this.props.responsable_seleccionado_id
+            tarea: this.props.item.name            
         });
         e.preventDefault();
     }
@@ -34,24 +42,45 @@ class ToDoItem extends React.Component {
             this.setState({tarea: e.target.value});
         }
         if (e.target.name==="responsable") {
-            this.setState({responsable_seleccionado_id: e.target.value});
+            this.setState({responsable_seleccionado_Id: e.target.value});
         }
     }    
 
-    async save() {
+    async updateItem() {
         const obj = {
             id: this.props.item.id,
             name: this.state.tarea,
             isComplete: this.props.item.isComplete,
-            assigned_to: this.state.responsable_seleccionado_id
+            responsible: this.props.item.responsible
         }
         await this.toDoService.putTarea(obj);
         this.props.onUpdate(obj);
         this.setState({
             en_edicion: false,
-            tarea: '',
-            responsable_seleccionado_id: 0
+            tarea: ''
         });        
+    }
+
+    async addResponsible() {
+        const id = this.props.item.id;
+        const changes={
+            "field": "Responsible",
+            "value": this.state.responsable_seleccionado_Id
+        };
+        const pos = this.props.responsables.findIndex(responsable =>{ 
+            return responsable.id === this.state.responsable_seleccionado_Id
+        });
+        const obj = {
+            id: this.props.item.id,
+            name: this.state.tarea,
+            isComplete: this.props.item.isComplete,
+            responsible: this.props.responsables[pos]
+        };
+        await this.toDoService.patchTarea(id, changes);
+        this.props.onUpdate(obj);
+        this.setState({
+            asignando_responsable: false
+        });
     }
 
 
@@ -59,18 +88,25 @@ class ToDoItem extends React.Component {
         const obj = {
             id: this.props.item.id,
             name: this.props.item.name,
-            isComplete: !this.props.item.isComplete
-            //assigned_to: this.state.responsable_seleccionado_id
+            isComplete: !this.props.item.isComplete,
+            responsible : this.props.item.responsible
         }
         await this.toDoService.putTarea(obj);
         this.props.onUpdate(obj);    
-    }    
+    }
+
+    async removeItem()
+    {
+        const id = this.props.item.id;
+        await this.toDoService.deleteTarea(id);
+        this.props.onDelete(id);
+    }
 
     cancel() {
         this.setState({
             en_edicion: false,
             tarea: '',
-            responsable_seleccionado_id: 0
+            asignando_responsable: false
         });
     }
 
@@ -78,39 +114,57 @@ class ToDoItem extends React.Component {
 
     render() {
         var contenidoTarjeta;
-        if (this.props.item.isComplete) {
-            contenidoTarjeta = <>
-                                <button className="btn btn-success" onClick={this.toggleDone}><i className="fa fa-check"></i></button> &nbsp;
-                                {this.props.item.name}
-                                </>
-        } else {
-            contenidoTarjeta = <>
-                                <button className="btn btn-outline-secondary" onClick={this.toggleDone}><i className="fa fa-check"></i></button> &nbsp;
-                                {this.props.item.name}
-                                </>
-        }
+        var nombreResponsable;
+
+        this.props.item.responsible ? nombreResponsable=this.props.item.responsible.userName : nombreResponsable="Sin Asignar"
+
+        contenidoTarjeta = <>
+                            {
+                            this.props.item.isComplete?
+                                <><button className="btn btn-success" onClick={this.toggleDone}><i className="fa fa-check"></i></button> &nbsp;</>
+                            : <><button className="btn btn-outline-secondary" onClick={this.toggleDone}><i className="fa fa-check"></i></button> &nbsp;</>
+                            } 
+                            <div className="float-right">                           
+                            { 
+                            !this.props.item.responsible ?                            
+                                <><button className="btn btn-primary" onClick={this.habilitarAsignarResponsable}><i className="fa fa-user-plus"></i></button>&nbsp;</>                            
+                            : null
+                            }                                 
+                                <button className="btn btn-primary" onClick={this.habilitarEdicion}><i className="fa fa-pencil"></i></button> &nbsp;
+                                <button className="btn btn-danger" onClick={this.removeItem}><i className="fa fa-trash"></i></button> &nbsp;
+                            </div>
+                            {`${this.props.item.name} (Responsable: ${nombreResponsable})`}
+                            </>
 
         const listadoResponsables = this.props.responsables.map(unItem => {
-            return <option value={unItem.id} key={unItem.id}>{unItem.nombre}</option>
+            return <option value={unItem.id} key={unItem.id}>{unItem.userName}</option>
         })        
         if (this.state.en_edicion) {
             contenidoTarjeta = 
                                 <div className="input-group mb-3 todo-item">
                                     <input type="text" className="form-control" name="tarea" placeholder="Nueva tarea" value={this.state.tarea} onChange={this.cambioInput}/>
-                                    <select name="responsable" className="custom-select" value={this.state.responsable_seleccionado_id} onChange={this.cambioInput}>
+                                    <div className="input-group-append">
+                                        <button className="btn btn-outline-success" type="button" onClick={this.updateItem}><i className="fa fa-check"></i></button>
+                                        <button className="btn btn-outline-danger" type="button" onClick={this.cancel}><i className="fa fa-times"></i></button>
+                                    </div>
+                                </div>                                
+        }
+        if (this.state.asignando_responsable) {
+            contenidoTarjeta = 
+                                <div className="input-group mb-3 todo-item">
+                                    <select name="responsable" className="custom-select" value={this.state.responsable_seleccionado_Id} onChange={this.cambioInput}>
                                         {listadoResponsables}
                                     </select>
                                     <div className="input-group-append">
-                                        <button className="btn btn-outline-success" type="button" onClick={this.save}><i className="fa fa-check"></i></button>
+                                        <button className="btn btn-outline-success" type="button" onClick={this.addResponsible}><i className="fa fa-check"></i></button>
                                         <button className="btn btn-outline-danger" type="button" onClick={this.cancel}><i className="fa fa-times"></i></button>
                                     </div>
                                 </div>
-                                
         }
         return (
             <div className="card">
                 <div className="card-body">
-                    <h5 className="card-title" onDoubleClick={this.habilitarEdicion}>{contenidoTarjeta}</h5>
+                    <h5 className="card-title">{contenidoTarjeta}</h5>
                 </div>
                 
             </div>
@@ -120,13 +174,15 @@ class ToDoItem extends React.Component {
 
 const mapToProps = (state) => {
     return {
-        responsables: state.responsablesList
+        responsables: state.responsablesList,
+        token: state.token
     }
 }
 
 const mapDispatch = (dispatch) => {
     return {
-        onUpdate: (obj) => {dispatch({type:'UPDATE_ITEM', data: obj})}
+        onUpdate: (obj) => {dispatch({type:'UPDATE_ITEM', data: obj})},
+        onDelete: (id) => {dispatch({type:'REMOVE_ITEM', data: id})}
     }
 }
 

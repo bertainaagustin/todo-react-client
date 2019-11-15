@@ -1,13 +1,7 @@
 const estadoInicial = {
     taskList: [],
-    token: '',
-    responsablesList : [
-        {id: 1, nombre: 'Persona 1'},
-        {id: 2, nombre: 'Persona 2'},
-        {id: 3, nombre: 'Persona 3'},
-        {id: 4, nombre: 'Persona 4'},
-        {id: 5, nombre: 'Persona 5'}
-    ]
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ3VzdGluQGJlcnRhaW5hIiwianRpIjoiM2UzNmU2MTYtYjdhZS00ZjIyLWJjYjEtYTY5YTU2YzRjYWFlIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxMWE3NTNmNC02ZTJkLTRjNzMtYjM1My03YzQ3YzE0OTVhMDgiLCJleHAiOjE1NzUwNzE3OTksImlzcyI6Imh0dHA6Ly95b3VyZG9tYWluLmNvbSIsImF1ZCI6Imh0dHA6Ly95b3VyZG9tYWluLmNvbSJ9.iru8GCSghL4xrFLgDoicNnwJ_hHaneRFDx27IssQN2o',
+    responsablesList : []
 }
 export default function(estadoActual = estadoInicial, action) 
 {
@@ -36,7 +30,8 @@ export default function(estadoActual = estadoInicial, action)
         case 'INIT':
             return {
                 ...estadoActual,
-                taskList: action.data
+                taskList: action.data.tareas,
+                responsablesList: action.data.usuarios
             }
 
         case 'UPDATE_ITEM':

@@ -4,6 +4,7 @@ import ToDoService from '../../services/ToDoService';
 import ToDoItem from './ToDoItem/ToDoItem';
 import ToDoAddItem from './TodoAddItem/ToDoAddItem';
 import dotenv from 'dotenv';
+import ManageUsersService from '../../services/ManageUsersService';
 dotenv.config();
 
 
@@ -12,11 +13,13 @@ class ToDo extends React.Component {
     constructor(props) {
         super(props);
         this.toDoService = new ToDoService(props.token); // Instancio el servicio
+        this.manageUsersService = new ManageUsersService(props.token); // Instancio el servicio
     }
 
     async componentDidMount() {
-        var respuesta = await this.toDoService.getTareas(); // Uso el servicio instanciado
-        this.props.onInit(respuesta);
+        var tareas = await this.toDoService.getTareas(); // Uso el servicio instanciado
+        var usuarios = await this.manageUsersService.getUsers();
+        this.props.onInit({tareas, usuarios});
     }
 
     render() {
@@ -27,8 +30,9 @@ class ToDo extends React.Component {
             <>
                 <h1>{process.env.REACT_APP_NOMBRE_PROYECTO}</h1>
                 <ToDoAddItem />
-
-                {listado}
+                <div>
+                    {listado}
+                </div>
             </>
         )
     }
