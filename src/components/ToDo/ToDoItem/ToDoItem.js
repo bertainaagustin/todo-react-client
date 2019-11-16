@@ -1,6 +1,7 @@
 import React from 'react';
 import {connect} from 'react-redux';
 import ToDoService from '../../../services/ToDoService';
+import ActivityService from '../../../services/ActivityService';
 
 class ToDoItem extends React.Component {
 
@@ -19,8 +20,10 @@ class ToDoItem extends React.Component {
         this.addResponsible = this.addResponsible.bind(this);
         this.cancel = this.cancel.bind(this);
         this.toggleDone = this.toggleDone.bind(this);
-        this.removeItem = this.removeItem.bind(this);       
+        this.removeItem = this.removeItem.bind(this);   
+        this.addActivity = this.addActivity.bind(this);       
         this.toDoService = new ToDoService(props.token); // Instancio el servicio
+        this.activityService = new ActivityService(props.token); // Instancio el servicio
 
     }
     habilitarAsignarResponsable(e)
@@ -53,12 +56,17 @@ class ToDoItem extends React.Component {
             isComplete: this.props.item.isComplete,
             responsible: this.props.item.responsible
         }
+        const actObj = {
+            userName: this.props.usuario,
+            details: `la tarea [${this.props.item.name}] cambio su nombre a [${this.state.tarea}]`
+        }
         await this.toDoService.putTarea(obj);
         this.props.onUpdate(obj);
         this.setState({
             en_edicion: false,
             tarea: ''
-        });        
+        });
+        this.addActivity(actObj);
     }
 
     async addResponsible() {
@@ -72,15 +80,20 @@ class ToDoItem extends React.Component {
         });
         const obj = {
             id: this.props.item.id,
-            name: this.state.tarea,
+            name: this.props.item.name,
             isComplete: this.props.item.isComplete,
             responsible: this.props.responsables[pos]
         };
+        const actObj ={
+            userName: this.props.usuario,
+            details: `Se asigna [${this.props.responsables[pos].userName}] como responsable de la tarea [${this.props.item.name}]`
+        }
         await this.toDoService.patchTarea(id, changes);
         this.props.onUpdate(obj);
         this.setState({
             asignando_responsable: false
         });
+        this.addActivity(actObj);
     }
 
 
@@ -91,15 +104,25 @@ class ToDoItem extends React.Component {
             isComplete: !this.props.item.isComplete,
             responsible : this.props.item.responsible
         }
+        const actObj = {
+            userName: this.props.usuario,
+            details: `Se marca la tarea [${this.props.item.name}] como ${!this.props.item.isComplete? "finalizada" : "no finalizada"}`
+        }
         await this.toDoService.putTarea(obj);
-        this.props.onUpdate(obj);    
+        this.props.onUpdate(obj);
+        this.addActivity(actObj);
     }
 
     async removeItem()
     {
+        const actObj = {
+            userName: this.props.usuario,
+            details: `Se elimina la tarea [${this.props.item.name}]`
+        }
         const id = this.props.item.id;
         await this.toDoService.deleteTarea(id);
         this.props.onDelete(id);
+        this.addActivity(actObj);
     }
 
     cancel() {
@@ -110,6 +133,10 @@ class ToDoItem extends React.Component {
         });
     }
 
+    async addActivity(actObj){
+        const newAct = await this.activityService.postActivity(actObj);
+        this.props.onAddActivity(newAct);
+    }
 
 
     render() {
@@ -127,11 +154,11 @@ class ToDoItem extends React.Component {
                             <div className="float-right">                           
                             { 
                             !this.props.item.responsible ?                            
-                                <><button className="btn btn-primary" onClick={this.habilitarAsignarResponsable}><i className="fa fa-user-plus"></i></button>&nbsp;</>                            
+                                <><button title="Asignar Responsable" className="btn btn-primary" onClick={this.habilitarAsignarResponsable}><i className="fa fa-user-plus"></i></button>&nbsp;</>                            
                             : null
                             }                                 
-                                <button className="btn btn-primary" onClick={this.habilitarEdicion}><i className="fa fa-pencil"></i></button> &nbsp;
-                                <button className="btn btn-danger" onClick={this.removeItem}><i className="fa fa-trash"></i></button> &nbsp;
+                                <button title="Editar Tarea" className="btn btn-primary" onClick={this.habilitarEdicion}><i className="fa fa-pencil"></i></button> &nbsp;
+                                <button title="Eliminar Tarea" className="btn btn-danger" onClick={this.removeItem}><i className="fa fa-trash"></i></button> &nbsp;
                             </div>
                             {`${this.props.item.name} (Responsable: ${nombreResponsable})`}
                             </>
@@ -175,14 +202,16 @@ class ToDoItem extends React.Component {
 const mapToProps = (state) => {
     return {
         responsables: state.responsablesList,
-        token: state.token
+        token: state.token,
+        usuario: state.user
     }
 }
 
 const mapDispatch = (dispatch) => {
     return {
         onUpdate: (obj) => {dispatch({type:'UPDATE_ITEM', data: obj})},
-        onDelete: (id) => {dispatch({type:'REMOVE_ITEM', data: id})}
+        onDelete: (id) => {dispatch({type:'REMOVE_ITEM', data: id})},
+        onAddActivity: (act) => {dispatch({type:'ADD_ACTIVITY', data: act})}
     }
 }
 

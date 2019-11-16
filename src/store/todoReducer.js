@@ -1,7 +1,9 @@
 const estadoInicial = {
+    user: '',
     taskList: [],
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ3VzdGluQGJlcnRhaW5hIiwianRpIjoiM2UzNmU2MTYtYjdhZS00ZjIyLWJjYjEtYTY5YTU2YzRjYWFlIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxMWE3NTNmNC02ZTJkLTRjNzMtYjM1My03YzQ3YzE0OTVhMDgiLCJleHAiOjE1NzUwNzE3OTksImlzcyI6Imh0dHA6Ly95b3VyZG9tYWluLmNvbSIsImF1ZCI6Imh0dHA6Ly95b3VyZG9tYWluLmNvbSJ9.iru8GCSghL4xrFLgDoicNnwJ_hHaneRFDx27IssQN2o',
-    responsablesList : []
+    token: '',
+    responsablesList : [],
+    actividadesList: []
 }
 export default function(estadoActual = estadoInicial, action) 
 {
@@ -13,6 +15,14 @@ export default function(estadoActual = estadoInicial, action)
                 taskList: [
                     ...estadoActual.taskList,
                     action.data
+                ]
+            }
+        case 'ADD_ACTIVITY':
+            return {
+                ...estadoActual,
+                actividadesList: [
+                    action.data,
+                    ...estadoActual.actividadesList                    
                 ]
             }
         case 'REMOVE_ITEM':
@@ -31,7 +41,8 @@ export default function(estadoActual = estadoInicial, action)
             return {
                 ...estadoActual,
                 taskList: action.data.tareas,
-                responsablesList: action.data.usuarios
+                responsablesList: action.data.usuarios,
+                actividadesList: action.data.actividades
             }
 
         case 'UPDATE_ITEM':
@@ -53,6 +64,12 @@ export default function(estadoActual = estadoInicial, action)
             return {
                 ...estadoActual,
                 token: action.data
+            }
+
+        case 'SET_USER':
+            return {
+                ...estadoActual,
+                user: action.data
             }
         default:
             return {...estadoActual};

@@ -21,6 +21,15 @@ code {
   padding: 2em;
 }
 
+.itemList {
+  overflow: auto;
+  height: 40vh;
+}
+.actividadList {
+  overflow: auto;
+  height: 20vh;
+}
+
 #contenedor-login {
   display: flex;
   align-items: center;

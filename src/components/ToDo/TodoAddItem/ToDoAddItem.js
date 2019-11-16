@@ -1,6 +1,7 @@
 import React from 'react';
 import {connect} from 'react-redux';
 import ToDoService from '../../../services/ToDoService';
+import ActivityService from '../../../services/ActivityService';
 
 class ToDoAddItem extends React.Component {
 
@@ -12,7 +13,9 @@ class ToDoAddItem extends React.Component {
         }
         this.cambioInput = this.cambioInput.bind(this);
         this.save = this.save.bind(this);
+        this.addActivity = this.addActivity.bind(this);
         this.toDoService = new ToDoService(props.token); // Instancio el servicio
+        this.activityService = new ActivityService(props.token); // Instancio el servicio
     }
 
     cambioInput(e) {
@@ -31,8 +34,19 @@ class ToDoAddItem extends React.Component {
             name: this.state.tarea,
             isComplete: false
         }
+        const actObj = {
+            userName: this.props.usuario,
+            details: `Se agrega una nueva tarea: [${this.state.tarea}]`
+        }
         const respuesta = await this.toDoService.postTarea(obj);
         this.props.onSave(respuesta);
+        this.addActivity(actObj);
+
+    }
+
+    async addActivity(actObj){
+        const newAct = await this.activityService.postActivity(actObj);
+        this.props.onAddActivity(newAct);
     }
 
     render() {
@@ -54,13 +68,16 @@ class ToDoAddItem extends React.Component {
 const mapToProps = (state) => {
     return {
         responsables: state.responsablesList,
-        token: state.token
+        token: state.token,
+        usuario: state.user
     }
 }
 
 const mapDispatch = (dispatch) => {
     return {
-        onSave: (obj) => {dispatch({type:'ADD_ITEM', data: obj})}
+        onSave: (obj) => {dispatch({type:'ADD_ITEM', data: obj})},
+        onAddActivity: (act) => {dispatch({type:'ADD_ACTIVITY', data: act})}
+
     }
 }
 

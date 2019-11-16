@@ -5,6 +5,8 @@ import ToDoItem from './ToDoItem/ToDoItem';
 import ToDoAddItem from './TodoAddItem/ToDoAddItem';
 import dotenv from 'dotenv';
 import ManageUsersService from '../../services/ManageUsersService';
+import Activity from './Activity/Activity';
+import ActivityService from '../../services/ActivityService';
 dotenv.config();
 
 
@@ -14,25 +16,35 @@ class ToDo extends React.Component {
         super(props);
         this.toDoService = new ToDoService(props.token); // Instancio el servicio
         this.manageUsersService = new ManageUsersService(props.token); // Instancio el servicio
+        this.activityService = new ActivityService(props.token); // Instancio el servicio
     }
 
     async componentDidMount() {
         var tareas = await this.toDoService.getTareas(); // Uso el servicio instanciado
         var usuarios = await this.manageUsersService.getUsers();
-        this.props.onInit({tareas, usuarios});
+        var actividades = await this.activityService.getActivities();
+        this.props.onInit({tareas, usuarios, actividades});
     }
 
     render() {
-        var listado = this.props.listado.map(unItem => {
+        var listadoTareas = this.props.tareas.map(unItem => {
             return <ToDoItem item={unItem} key={unItem.id}/>
+        })
+        var listadoActividades = this.props.actividades.map(unActivity => {
+            return <Activity actividad={unActivity} key={unActivity.id}/>
         })
         return (
             <>
                 <h1>{process.env.REACT_APP_NOMBRE_PROYECTO}</h1>
                 <ToDoAddItem />
-                <div>
-                    {listado}
+                <h2> Tareas </h2>
+                <div className="itemList mb-3">
+                    {listadoTareas}
                 </div>
+                <h2> Historia </h2>
+                <div className="actividadList mb-3">
+                    {listadoActividades}
+                </div>                
             </>
         )
     }
@@ -40,14 +52,15 @@ class ToDo extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-        listado: state.taskList,
+        tareas: state.taskList,
+        actividades: state.actividadesList,
         token: state.token
     }
 }
 
 const mapActions = (dispatch) => {
     return {
-        onInit: (listado) => dispatch({type: 'INIT', data: listado})
+        onInit: (listadosIniciales) => dispatch({type: 'INIT', data: listadosIniciales})
     }
 }
 

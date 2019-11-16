@@ -21,6 +21,7 @@ class Login extends React.Component {
         try {
             var respuesta = await this.loginService.login(this.state.email, this.state.password);
             this.props.setToken(respuesta);
+            this.props.setUser(this.state.email);
             this.props.history.push('/');
         } catch (e) {
             this.setState({errores: 'Hubo un problema en la conexión con el servidor'});
@@ -60,7 +61,8 @@ class Login extends React.Component {
 
 const mapToActions = (dispatch) => {
     return {
-        setToken: (token) => dispatch({type:'SET_TOKEN', data: token})
+        setToken: (token) => dispatch({type:'SET_TOKEN', data: token}),
+        setUser: (email) => dispatch({type:'SET_USER', data: email})
     }
 }
 
